@@ -1,9 +1,13 @@
 import express from 'express';
 import { MongoClient } from 'mongodb';
 import 'dotenv/config'
+import cors from 'cors';
 
 const app = express();
 const PORT = 8000;
+
+app.use(cors());
+app.use(express.json());
 
 const client = new MongoClient(process.env.MONGODB_URL);
 export async function connectToMongoDB() {
@@ -16,9 +20,19 @@ export async function connectToMongoDB() {
   }
 }
 
-connectToMongoDB();
+const mongoClient = await connectToMongoDB();
+const db = mongoClient.db("studiospace");
+const studiosCollection = db.collection("studios");
 
-//http://localhost:8000/
+
+app.post('/add-studio', async (req, res) => {
+    const studioData = req.body;
+    const result = await studiosCollection.insertOne(studioData);
+    console.log('Studio added:', result);
+    res.send(result);
+})
+
+//http://localhost:8000/add-studio
 
 app.get('/', (req,res) =>{
     res.send({message:'Server is running successfully!'});
