@@ -23,6 +23,7 @@ export async function connectToMongoDB() {
 const mongoClient = await connectToMongoDB();
 const db = mongoClient.db("studiospace");
 const studiosCollection = db.collection("studios");
+const bookingsCollection = db.collection("bookings");
 
 
 app.post('/add-studio', async (req, res) => {
@@ -43,7 +44,20 @@ app.get('/studios/:id', async (req,res)=>{
   res.send(studio);
 })
 
-//http://localhost:8000/studios
+app.post('/my-bookings', async (req, res) => {
+    const bookingData = req.body;
+    const result = await bookingsCollection.insertOne(bookingData);
+    console.log('Booking added:', result);
+    res.send(result);
+})
+
+app.get('/my-booking/:email', async(req,res)=>{
+  const {email} = req.params;
+  const booking = await bookingsCollection.find(email.email).toArray();
+  res.send(booking);
+})
+
+//http://localhost:8000/my-bookings
 
 app.get('/', (req,res) =>{
     res.send({message:'Server is running successfully!'});
