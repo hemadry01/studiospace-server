@@ -31,8 +31,12 @@ app.post('/add-studio', async (req, res) => {
     console.log('Studio added:', result);
     res.send(result);
 })
+app.get('/studios', async (req, res) => {
+    const studios = await studiosCollection.find({}).toArray();
+    res.send(studios);
+})
 
-//http://localhost:8000/add-studio
+//http://localhost:8000/studios
 
 app.get('/', (req,res) =>{
     res.send({message:'Server is running successfully!'});
