@@ -37,6 +37,11 @@ app.get('/studios', async (req, res) => {
     res.send(studios);
 })
 
+app.get('/studio-featured', async(req,res)=>{
+  const studios = await studiosCollection.find({}).limit(6).toArray();
+    res.send(studios);
+})
+
 app.get('/studios/:id', async (req,res)=>{
   const {id} = req.params;
   const studio = await studiosCollection.findOne({_id:new ObjectId(id)});
@@ -53,11 +58,11 @@ app.post('/my-bookings', async (req, res) => {
 
 app.get('/my-booking/:email', async(req,res)=>{
   const {email} = req.params;
-  const booking = await bookingsCollection.find(email.email).toArray();
+  const booking = await bookingsCollection.find({email:email}).toArray();
   res.send(booking);
 })
 
-//http://localhost:8000/my-bookings
+//http://localhost:8000/studio-featured
 
 app.get('/', (req,res) =>{
     res.send({message:'Server is running successfully!'});
