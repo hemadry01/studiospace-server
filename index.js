@@ -65,6 +65,13 @@ app.patch('/studios/:id', async(req,res)=>{
   res.json(result)
 })
 
+app.delete('/studios/:id', async(req,res)=>{
+
+    const {id}=req.params
+    const result = await studiosCollection.deleteOne({_id: new ObjectId(id)})
+    res.send(result);
+})
+
 app.get('/studio-featured', async(req,res)=>{
   const studios = await studiosCollection.find({}).limit(6).toArray();
     res.send(studios);
@@ -82,7 +89,7 @@ app.get('/my-booking/:email', async(req,res)=>{
   res.send(booking);
 })
 
-//http://localhost:8000/studios/:email
+//http://localhost:8000/studios/:id
 
 app.get('/', (req,res) =>{
     res.send({message:'Server is running successfully!'});
