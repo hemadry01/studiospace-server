@@ -36,6 +36,12 @@ app.get('/studios', async (req, res) => {
     const studios = await studiosCollection.find({}).toArray();
     res.send(studios);
 })
+app.get('/studios/:email', async (req, res) => {
+    const email = req.params.email;
+    const studios = await studiosCollection.find({email:email}).toArray();
+    console.log("host studio",studios);
+    res.send(studios);
+})
 
 app.get('/studio-featured', async(req,res)=>{
   const studios = await studiosCollection.find({}).limit(6).toArray();
@@ -58,11 +64,11 @@ app.post('/my-bookings', async (req, res) => {
 
 app.get('/my-booking/:email', async(req,res)=>{
   const {email} = req.params;
-  const booking = await bookingsCollection.find({email:email}).toArray();
+  const booking = await bookingsCollection.find({ownerEmail:email}).toArray();
   res.send(booking);
 })
 
-//http://localhost:8000/studio-featured
+//http://localhost:8000/studios/:email
 
 app.get('/', (req,res) =>{
     res.send({message:'Server is running successfully!'});
