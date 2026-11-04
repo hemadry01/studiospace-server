@@ -55,6 +55,16 @@ app.get('/studios/:key', async (req, res) => {
     }
 })
 
+app.patch('/studios/:id', async(req,res)=>{
+  const {id} = req.params;
+  const updateData = req.body
+  const result = await studiosCollection.updateOne(
+    {_id:new ObjectId(id)},
+    {$set:updateData}
+  )
+  res.json(result)
+})
+
 app.get('/studio-featured', async(req,res)=>{
   const studios = await studiosCollection.find({}).limit(6).toArray();
     res.send(studios);
