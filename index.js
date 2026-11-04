@@ -32,29 +32,33 @@ app.post('/add-studio', async (req, res) => {
     console.log('Studio added:', result);
     res.send(result);
 })
-app.get('/studios', async (req, res) => {
-    const studios = await studiosCollection.find({}).toArray();
-    res.send(studios);
-})
-app.get('/studios/:email', async (req, res) => {
-    const email = req.params.email;
-    const studios = await studiosCollection.find({email:email}).toArray();
-    console.log("host studio",studios);
-    res.send(studios);
+// app.get('/studios', async (req, res) => {
+//     const studios = await studiosCollection.find({}).toArray();
+//     res.send(studios);
+// })
+app.get('/studios/:key', async (req, res) => {
+    const { key } = req.params;
+    try {
+        // An ObjectId is 24 hex characters; emails always contain "@".
+        if (ObjectId.isValid(key)) {
+            const studio = await studiosCollection.findOne({ _id: new ObjectId(key) });
+            console.log('Studio found:', studio);
+            res.send(studio);
+        } else {
+            const studios = await studiosCollection.find({ email: key }).toArray();
+            console.log('Host studios:', studios);
+            res.send(studios);
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: 'Failed to fetch studios' });
+    }
 })
 
 app.get('/studio-featured', async(req,res)=>{
   const studios = await studiosCollection.find({}).limit(6).toArray();
     res.send(studios);
 })
-
-app.get('/studios/:id', async (req,res)=>{
-  const {id} = req.params;
-  const studio = await studiosCollection.findOne({_id:new ObjectId(id)});
-  console.log('Studio found:', studio);
-  res.send(studio);
-})
-
 app.post('/my-bookings', async (req, res) => {
     const bookingData = req.body;
     const result = await bookingsCollection.insertOne(bookingData);
