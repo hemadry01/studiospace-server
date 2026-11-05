@@ -2,6 +2,7 @@ import express from 'express';
 import { MongoClient,ObjectId  } from 'mongodb';
 import 'dotenv/config'
 import cors from 'cors';
+import { createLocalJWKSet, createRemoteJWKSet, jwtVerify } from 'jose';
 
 const app = express();
 const PORT = 8000;
@@ -25,8 +26,32 @@ const db = mongoClient.db("studiospace");
 const studiosCollection = db.collection("studios");
 const bookingsCollection = db.collection("bookings");
 
+const verifyToken = async(req,res,next)=>{
+  const authHeader = req.headers.authorization
+  if(!authHeader){
+    return res.status(401).send({msg:"Unauthorized!"});
+  }
+  const token = authHeader.split(" ")[1];
+  if(!token){
+    return res.status(401).send({msg:"Unauthorized!"});
+  }
+  console.log(token);
 
-app.post('/add-studio', async (req, res) => {
+  const JWKS = createRemoteJWKSet(new URL('http://localhost:3000/api/auth/jwks'))
+  try{
+    const {payload} = await jwtVerify(token,JWKS)
+    next();
+  }catch(e){
+    return res.status(500).send({msg:"Server Error"});
+  }
+
+  console.log(payload);
+
+
+}
+
+
+app.post('/add-studio',verifyToken, async (req, res) => {
     const studioData = req.body;
     const result = await studiosCollection.insertOne(studioData);
     console.log('Studio added:', result);
@@ -54,7 +79,7 @@ app.get('/studios/:key', async (req, res) => {
     }
 })
 
-app.patch('/studios/:id', async(req,res)=>{
+app.patch('/studios/:id',verifyToken, async(req,res)=>{
   const {id} = req.params;
   const updateData = req.body
   const result = await studiosCollection.updateOne(
@@ -87,7 +112,7 @@ app.post('/my-bookings', async (req, res) => {
     res.send(result);
 })
 
-app.get('/my-booking/:email', async(req,res)=>{
+app.get('/my-booking/:email',verifyToken, async(req,res)=>{
   const {email} = req.params;
    console.log("Received Email:", email);
   const booking = await bookingsCollection.find({email:email}).toArray();
@@ -95,7 +120,7 @@ app.get('/my-booking/:email', async(req,res)=>{
   res.send(booking);
 })
 
-app.delete('/my-booking/:id', async(req,res)=>{
+app.delete('/my-booking/:id',verifyToken, async(req,res)=>{
   const {id}= req.params;
   const result= bookingsCollection.deleteOne({_id:id})
   res.send(result)
