@@ -26,29 +26,70 @@ const db = mongoClient.db("studiospace");
 const studiosCollection = db.collection("studios");
 const bookingsCollection = db.collection("bookings");
 
-const verifyToken = async(req,res,next)=>{
-  const authHeader = req.headers.authorization
-  if(!authHeader){
-    return res.status(401).send({msg:"Unauthorized!"});
+// const verifyToken = async(req,res,next)=>{
+//   const authHeader = req.headers.authorization
+//   if(!authHeader){
+//     return res.status(401).send({msg:"Unauthorized!"});
+//   }
+//   const token = authHeader.split(" ")[1];
+//   if(!token){
+//     return res.status(401).send({msg:"Unauthorized!"});
+//   }
+//   console.log(token);
+
+//   const JWKS = createRemoteJWKSet(new URL('http://localhost:3000/api/auth/jwks'))
+//   try{
+//     const {payload} = await jwtVerify(token,JWKS)
+//     next();
+//   }catch(e){
+//     return res.status(500).send({msg:"Server Error"});
+//   }
+
+//   console.log(payload);
+
+
+// }
+
+
+const verifyToken = async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({
+      msg: "Unauthorized!",
+    });
   }
+
   const token = authHeader.split(" ")[1];
-  if(!token){
-    return res.status(401).send({msg:"Unauthorized!"});
-  }
-  console.log(token);
 
-  const JWKS = createRemoteJWKSet(new URL('http://localhost:3000/api/auth/jwks'))
-  try{
-    const {payload} = await jwtVerify(token,JWKS)
-    next();
-  }catch(e){
-    return res.status(500).send({msg:"Server Error"});
+  if (!token) {
+    return res.status(401).json({
+      msg: "Unauthorized!",
+    });
   }
 
-  console.log(payload);
+  const JWKS = createRemoteJWKSet(
+    new URL("http://localhost:3000/api/auth/jwks")
+  );
 
+  try {
+    const { payload } = await jwtVerify(token, JWKS);
 
-}
+    console.log("Verified Payload:", payload);
+
+    req.user = payload;
+
+    return next();
+
+  } catch (error) {
+    console.error("JWT Verification Error:", error);
+
+    return res.status(401).json({
+      msg: "Invalid or expired token",
+    });
+  }
+};
+
 
 
 app.post('/add-studio',verifyToken, async (req, res) => {
@@ -105,22 +146,43 @@ app.get('/studio-featured', async(req,res)=>{
   const studios = await studiosCollection.find({}).limit(6).toArray();
     res.send(studios);
 })
-app.post('/my-bookings', async (req, res) => {
+app.post('/my-bookings',verifyToken, async (req, res) => {
     const bookingData = req.body;
     const result = await bookingsCollection.insertOne(bookingData);
     console.log('Booking added:', result);
     res.send(result);
 })
 
-app.get('/my-booking/:email',verifyToken, async(req,res)=>{
-  const {email} = req.params;
-   console.log("Received Email:", email);
-  const booking = await bookingsCollection.find({email:email}).toArray();
-  console.log("Booking Data:", booking);
-  res.send(booking);
-})
+// app.get('/my-booking/:email',verifyToken, async(req,res)=>{
+//   const {email} = req.params;
+//    console.log("Received Email:", email);
+//   const booking = await bookingsCollection.find({email:email}).toArray();
+//   console.log("Booking Data:", booking);
+//   res.send(booking);
+// })
+app.get("/my-booking/:email", verifyToken, async (req, res) => {
+  try {
+    const { email } = req.params;
 
-app.delete('/my-booking/:id',verifyToken, async(req,res)=>{
+    console.log("Received Email:", email);
+
+    const booking = await bookingsCollection
+      .find({ email })
+      .toArray();
+
+    console.log("Booking Data:", booking);
+
+    return res.status(200).json(booking);
+  } catch (error) {
+    console.error("Booking API Error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch bookings",
+    });
+  }
+});
+
+app.delete('/my-booking/:id', async(req,res)=>{
   const {id}= req.params;
   const result= bookingsCollection.deleteOne({_id:id})
   res.send(result)
