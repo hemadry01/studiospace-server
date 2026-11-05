@@ -77,7 +77,6 @@ app.get('/studio-featured/:email', async(req,res)=>{
     res.send(studios);
 })
 app.get('/studio-featured', async(req,res)=>{
-  const { email } = req.params;
   const studios = await studiosCollection.find({}).limit(6).toArray();
     res.send(studios);
 })
@@ -90,11 +89,29 @@ app.post('/my-bookings', async (req, res) => {
 
 app.get('/my-booking/:email', async(req,res)=>{
   const {email} = req.params;
-  const booking = await bookingsCollection.find({ownerEmail:email}).toArray();
+   console.log("Received Email:", email);
+  const booking = await bookingsCollection.find({email:email}).toArray();
+  console.log("Booking Data:", booking);
   res.send(booking);
 })
 
-//http://localhost:8000/studios
+app.delete('/my-booking/:id', async(req,res)=>{
+  const {id}= req.params;
+  const result= bookingsCollection.deleteOne({_id:id})
+  res.send(result)
+})
+
+app.patch('/my-booking/:id', async(req,res)=>{
+  const {id} = req.params;
+  const updateData = req.body
+  const result = await bookingsCollection.updateOne(
+    {_id:id},
+    {$set:updateData}
+  )
+  res.json(result)
+})
+
+//http://localhost:8000/my-booking/:id
 
 app.get('/', (req,res) =>{
     res.send({message:'Server is running successfully!'});
