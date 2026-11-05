@@ -32,14 +32,13 @@ app.post('/add-studio', async (req, res) => {
     console.log('Studio added:', result);
     res.send(result);
 })
-// app.get('/studios', async (req, res) => {
-//     const studios = await studiosCollection.find({}).toArray();
-//     res.send(studios);
-// })
+app.get('/studios', async (req, res) => {
+    const studios = await studiosCollection.find({}).toArray();
+    res.send(studios);
+})
 app.get('/studios/:key', async (req, res) => {
     const { key } = req.params;
     try {
-        // An ObjectId is 24 hex characters; emails always contain "@".
         if (ObjectId.isValid(key)) {
             const studio = await studiosCollection.findOne({ _id: new ObjectId(key) });
             console.log('Studio found:', studio);
@@ -72,7 +71,13 @@ app.delete('/studios/:id', async(req,res)=>{
     res.send(result);
 })
 
+app.get('/studio-featured/:email', async(req,res)=>{
+  const { email } = req.params;
+  const studios = await studiosCollection.find({ email: email }).limit(6).toArray();
+    res.send(studios);
+})
 app.get('/studio-featured', async(req,res)=>{
+  const { email } = req.params;
   const studios = await studiosCollection.find({}).limit(6).toArray();
     res.send(studios);
 })
@@ -89,7 +94,7 @@ app.get('/my-booking/:email', async(req,res)=>{
   res.send(booking);
 })
 
-//http://localhost:8000/studios/:id
+//http://localhost:8000/studios
 
 app.get('/', (req,res) =>{
     res.send({message:'Server is running successfully!'});
